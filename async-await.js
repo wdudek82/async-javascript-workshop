@@ -1,5 +1,6 @@
 const fs = require("fs");
 const util = require("util");
+
 const readFile = util.promisify(fs.readFile);
 
 const asyncFileIterator = (files) => ({
@@ -11,9 +12,11 @@ const asyncFileIterator = (files) => ({
           done: true,
         });
       }
-      const file = files[this.i++];
 
-      return readFile(file, 'utf8').then((data) => ({
+      const file = files[this.i];
+      this.i += 1;
+
+      return readFile(file, "utf8").then((data) => ({
         done: false,
         value: data,
       }));
@@ -21,13 +24,10 @@ const asyncFileIterator = (files) => ({
   }),
 });
 
-const paths = [
-  "node\\files\\demofile.txt",
-  "node\\files\\demofile.other.txt",
-];
+const paths = ["node\\files\\demofile.txt", "node\\files\\demofile.other.txt"];
 
 (async () => {
-  for await (let file of asyncFileIterator(paths)) {
+  for await (const file of asyncFileIterator(paths)) {
     console.log(file);
   }
 })();
