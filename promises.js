@@ -1,23 +1,23 @@
-const fs = require("fs");
-const zlib = require("zlib");
-
-function gzip(data) {
-  return new Promise((resolve, reject) => {
-    zlib.gzip(data, (err, result) => {
-      if (err) return reject(err);
-      resolve(result);
-    });
-  });
-}
-
-function readFile(filename, encoding) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(filename, encoding, (err, data) => {
-      if (err) return reject(err);
-      resolve(data);
-    });
-  });
-}
+// const fs = require("fs");
+// const zlib = require("zlib");
+//
+// function gzip(data) {
+//   return new Promise((resolve, reject) => {
+//     zlib.gzip(data, (err, result) => {
+//       if (err) return reject(err);
+//       resolve(result);
+//     });
+//   });
+// }
+//
+// function readFile(filename, encoding) {
+//   return new Promise((resolve, reject) => {
+//     fs.readFile(filename, encoding, (err, data) => {
+//       if (err) return reject(err);
+//       resolve(data);
+//     });
+//   });
+// }
 
 // readFile("node\\files\\demofile.txt", "utf-8")
 //   .then(
@@ -47,19 +47,62 @@ function readFile(filename, encoding) {
 //   console.log("Promise Resolved", value);
 // });
 
+// function timeout(sleep) {
+//   return new Promise((_, reject) => setTimeout(reject, sleep, "timeout"));
+// }
+//
+// function readFileFake(sleep) {
+//   return new Promise((resolve) => setTimeout(resolve, sleep, "File data"));
+// }
+//
+// Promise.race([
+//   readFileFake(5000),
+//   timeout(1000)
+// ])
+//   .then((data) => console.log(data))
+//   .catch((err) => console.log(err));
+
+function authenticate() {
+  console.log("Authenticating");
+  return new Promise((resolve) => {
+    return setTimeout(resolve, 1000, {
+      stateus: 200,
+    });
+  });
+}
+
+function publish() {
+  console.log("Publish");
+  return new Promise((resolve) => {
+    return setTimeout(resolve, 1000, { status: 403 });
+  });
+}
+
 function timeout(sleep) {
-  return new Promise((_, reject) => setTimeout(reject, sleep, "timeout"));
+  return new Promise((resolve, reject) => {
+    return setTimeout(reject, sleep, "timeout");
+  });
 }
 
-function readFileFake(sleep) {
-  return new Promise(resolve => setTimeout(resolve, sleep, "File data"));
+function safePublish() {
+  return publish()
+    .then((res) => {
+      if (res.status === 403) {
+        return authenticate();
+      }
+      return res;
+    })
+    .catch((err) => console.log(err));
 }
 
-Promise.race([
-  readFileFake(5000),
-  timeout(1000)
-])
-  .then((data) => console.log(data))
-  .catch((err) => console.log(err));
-
-
+Promise.race([safePublish(), timeout(3000)])
+  .then((res) => {
+    console.log("Published");
+  })
+  .catch((err) => {
+    if (err === "timeout") {
+      console.log("Request timed out");
+    } else {
+      console.log(err);
+    }
+  });
